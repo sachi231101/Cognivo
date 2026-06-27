@@ -8,6 +8,10 @@ import {
   CheckCircle2,
   Zap,
   Building2,
+  Globe,
+  FileText,
+  Users,
+  Shield,
 } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { LANDING } from "@/constants/testIds";
@@ -54,9 +58,9 @@ export default function Landing() {
         <div className="absolute inset-0 bb-grid-bg opacity-60 pointer-events-none" />
         <div className="relative max-w-7xl mx-auto px-6 lg:px-10 pt-16 md:pt-24 pb-20 grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7 bb-fade-up">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white text-[11px] uppercase tracking-[0.22em] text-slate-600">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              For modern, fast-moving teams
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-[11px] uppercase tracking-[0.22em] text-blue-700 font-semibold">
+              <Sparkles className="w-3.5 h-3.5" />
+              Built for Indian SMBs &amp; Enterprises
             </div>
             <h1 className="mt-6 font-display font-bold text-5xl sm:text-6xl lg:text-7xl tracking-tighter leading-[1.02]">
               Onboard new hires<br />
@@ -88,7 +92,7 @@ export default function Landing() {
               </button>
             </div>
             <div className="mt-6 text-xs text-slate-500 font-mono">
-              demo · admin@acmecorp.in / Admin@123
+              demo admin: admin@acmecorp.in / Admin@123
             </div>
           </div>
 
@@ -102,7 +106,7 @@ export default function Landing() {
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
                   <span className="ml-3 text-xs text-slate-500 font-mono">
-                    acme-corp · ask AI
+                    acme-corp-india · ask AI
                   </span>
                 </div>
                 <div className="p-6 space-y-4">
@@ -115,7 +119,7 @@ export default function Landing() {
                     <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[90%] text-sm shadow-sm">
                       <p className="text-slate-800">
                         According to the <span className="font-semibold">HR Policy</span>,
-                        you get <span className="font-semibold">18 days of annual paid leave</span>{" "}
+                        you get <span className="font-semibold">18 days of annual leave</span>{" "}
                         per year. Submit your request via the HR portal at least 5 working
                         days in advance.
                       </p>
@@ -128,14 +132,19 @@ export default function Landing() {
                   </div>
                   <div className="flex justify-end">
                     <div className="bg-[#EFF6FF] text-slate-900 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] text-sm">
-                      What's the maximum discount I can offer to a client?
+                      What's the maximum discount I can offer without approval?
                     </div>
                   </div>
                   <div className="flex">
                     <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[90%] text-sm shadow-sm">
                       Per the <span className="font-semibold">Sales SOP</span>, max discount
-                      without approval is <span className="font-semibold">10%</span>. Anything
-                      above 20% needs CEO approval — no exceptions.
+                      without approval is <span className="font-semibold">10%</span>. Above
+                      10% needs Sales Director approval; above 20% needs CEO approval.
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
+                          <Brain className="w-2.5 h-2.5" /> Sales SOP.txt
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -152,7 +161,7 @@ export default function Landing() {
             { k: "30 min", v: "Time to onboard" },
             { k: "100%", v: "From your docs only" },
             { k: "6", v: "Departments covered" },
-            { k: "0", v: "Cross-tenant leakage" },
+            { k: "₹0", v: "Data leakage risk" },
           ].map((s) => (
             <div key={s.v}>
               <div className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[#1E3A8A]">
@@ -188,7 +197,7 @@ export default function Landing() {
               {
                 n: "02",
                 t: "Upload your knowledge",
-                d: "Drop in PDFs, DOCX, Excel, or text files. Tag by department — HR, Finance, Sales, Engineering, Operations, Marketing.",
+                d: "Drop in PDFs, DOCX, or text files. Or paste a website URL — we'll crawl and save it. Tag by department — HR, Finance, Sales, and more.",
                 i: FolderIcon,
               },
               {
@@ -224,7 +233,7 @@ export default function Landing() {
               Features
             </div>
             <h2 className="mt-3 font-display text-4xl md:text-5xl font-semibold tracking-tight">
-              Built for serious B2B teams.
+              Built for serious Indian B2B teams.
             </h2>
           </div>
           <div className="mt-16 grid md:grid-cols-2 lg:grid-cols-3 gap-6 bb-stagger">
@@ -255,7 +264,7 @@ export default function Landing() {
               </h2>
               <p className="mt-5 text-slate-300 max-w-xl leading-relaxed">
                 Free for early teams. Set up in under 5 minutes. Your data stays
-                isolated to your workspace — always.
+                isolated to your workspace — always. Built for India.
               </p>
               <div className="mt-9 flex flex-col sm:flex-row gap-3">
                 <Link
@@ -303,7 +312,7 @@ function FolderIcon(props) {
 const features = [
   {
     t: "Multi-tenant isolation",
-    d: "Each company is a fully isolated workspace. Company A never sees Company B's data — ever.",
+    d: "Each company is a fully isolated workspace. Company A never sees Company B's data — guaranteed.",
     i: Lock,
   },
   {
@@ -317,18 +326,18 @@ const features = [
     i: Search,
   },
   {
-    t: "Instant onboarding",
-    d: "New hires get answers immediately instead of waiting days for a manager to reply.",
-    i: Clock,
+    t: "Website URL crawling",
+    d: "Paste any URL — careers page, policy page, handbook — and Business Brain crawls and indexes it automatically.",
+    i: Globe,
   },
   {
-    t: "PDF, DOCX, XLSX, TXT",
-    d: "Upload the formats you already use. Auto-extracted and indexed in seconds.",
-    i: FolderIcon,
+    t: "PDF, DOCX, TXT upload",
+    d: "Upload the formats you already use. Text is auto-extracted and indexed in seconds.",
+    i: FileText,
   },
   {
-    t: "Powered by Claude",
-    d: "Built on Claude Sonnet 4.5 for accurate, reasoned answers grounded in your data.",
+    t: "Powered by Gemini 2.0 Flash",
+    d: "Built on Google's Gemini 2.0 Flash for fast, accurate answers grounded strictly in your company data.",
     i: Sparkles,
   },
 ];

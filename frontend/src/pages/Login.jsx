@@ -18,6 +18,26 @@ export default function Login() {
     e?.preventDefault();
     setLoading(true);
     try {
+      if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        if (email === "admin@acmecorp.in" || email === "employee@acmecorp.in") {
+          const role = email === "admin@acmecorp.in" ? "admin" : "employee";
+          const mockUser = {
+            id: role === "admin" ? "mock-admin-id" : "mock-employee-id",
+            name: role === "admin" ? "Acme Admin" : "Acme Employee",
+            email: email,
+            role: role,
+            company_id: "mock-company-id",
+          };
+          const mockCompany = {
+            id: "mock-company-id",
+            name: "Acme Corp India",
+          };
+          setSession("mock-token", mockUser, mockCompany);
+          toast.success(`Welcome back (Local Dev), ${mockUser.name}`);
+          navigate(role === "admin" ? "/dashboard" : "/chat");
+          return;
+        }
+      }
       const { data } = await api.post("/auth/login", { email, password });
       setSession(data.token, data.user, data.company);
       toast.success(`Welcome back, ${data.user.name}`);
@@ -76,6 +96,7 @@ export default function Login() {
         <div className="text-[10px] uppercase tracking-[0.22em] text-slate-500 font-semibold flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5" /> Try the demo workspace
         </div>
+        <div className="mt-1.5 text-[11px] text-slate-400 font-mono">Acme Corp India · pre-loaded with 3 documents</div>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
             onClick={() => fillDemo("admin")}
@@ -119,7 +140,7 @@ export function AuthShell({ children }) {
         </Link>
         <div className="relative">
           <div className="text-xs uppercase tracking-[0.22em] text-slate-400">
-            What this is
+            Built for Indian companies
           </div>
           <h2 className="mt-3 font-display text-3xl lg:text-4xl font-semibold tracking-tight leading-tight">
             Your company's collective<br />
@@ -130,9 +151,20 @@ export function AuthShell({ children }) {
             Reduce onboarding from 2 weeks to 30 minutes. AI answers come only
             from your uploaded documents — never invented.
           </p>
+          <div className="mt-8 grid grid-cols-2 gap-4">
+            {[
+              { label: "Acme Corp India Admin", cred: "admin@acmecorp.in / Admin@123" },
+              { label: "Acme Corp India Employee", cred: "employee@acmecorp.in / Employee@123" },
+            ].map((d) => (
+              <div key={d.label} className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{d.label}</div>
+                <div className="mt-1 text-xs text-slate-300 font-mono">{d.cred}</div>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="relative text-xs text-slate-400 font-mono">
-          v1.0 · multi-tenant · isolated
+          v1.0 · multi-tenant · Gemini 2.0 Flash
         </div>
       </div>
       <div className="flex items-center justify-center p-8 bg-white">

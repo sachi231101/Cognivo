@@ -10,6 +10,7 @@ import Dashboard from "@/pages/Dashboard";
 import Documents from "@/pages/Documents";
 import Chat from "@/pages/Chat";
 import Employees from "@/pages/Employees";
+import History from "@/pages/History";
 import AppShell from "@/components/AppShell";
 
 function Protected({ children, adminOnly = false }) {
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/documents" element={<Protected><Documents /></Protected>} />
           <Route path="/chat" element={<Protected><Chat /></Protected>} />
           <Route path="/employees" element={<Protected adminOnly><Employees /></Protected>} />
+          <Route path="/history" element={<Protected><History /></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
