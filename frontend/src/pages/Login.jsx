@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Brain, ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { BRAND } from "@/lib/brand";
 import { AUTH_BB } from "@/constants/testIds";
 
 export default function Login() {
@@ -48,40 +49,13 @@ export default function Login() {
     }
   };
 
-  const fillDemo = async (role) => {
-    const demoEmail = role === "admin" ? "admin@acmecorp.in" : "employee@acmecorp.in";
-    const demoPassword = role === "admin" ? "Admin@123" : "Employee@123";
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-
-    setLoading(true);
-    try {
-      if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-        const mockUser = {
-          id: role === "admin" ? "mock-admin-id" : "mock-employee-id",
-          name: role === "admin" ? "Acme Admin" : "Acme Employee",
-          email: demoEmail,
-          role: role,
-          company_id: "mock-company-id",
-        };
-        const mockCompany = {
-          id: "mock-company-id",
-          name: "Acme Corp India",
-        };
-        setSession("mock-token", mockUser, mockCompany);
-        toast.success(`Welcome back (Local Dev), ${mockUser.name}`);
-        navigate(role === "admin" ? "/dashboard" : "/chat");
-        return;
-      }
-
-      const { data } = await api.post("/auth/login", { email: demoEmail, password: demoPassword });
-      setSession(data.token, data.user, data.company);
-      toast.success(`Welcome back, ${data.user.name}`);
-      navigate(data.user.role === "admin" ? "/dashboard" : "/chat");
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || "Login failed");
-    } finally {
-      setLoading(false);
+  const fillDemo = (role) => {
+    if (role === "admin") {
+      setEmail("admin@acmecorp.in");
+      setPassword("Admin@123");
+    } else {
+      setEmail("employee@acmecorp.in");
+      setPassword("Employee@123");
     }
   };
 
@@ -161,10 +135,8 @@ export function AuthShell({ children }) {
       <div className="hidden md:flex relative bg-[#0B132B] text-white p-12 flex-col justify-between overflow-hidden">
         <div className="absolute inset-0 bb-grain opacity-50" />
         <Link to="/" className="relative flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-md bg-blue-600 grid place-items-center">
-            <Brain className="w-4.5 h-4.5 text-white" />
-          </div>
-          <span className="font-display font-semibold text-lg">Business Brain</span>
+          <img src={BRAND.logo} alt={BRAND.name} className="w-9 h-9 rounded-full" />
+          <span className="font-display font-semibold text-lg">{BRAND.name}</span>
         </Link>
         <div className="relative">
           <div className="text-xs uppercase tracking-[0.22em] text-slate-400">

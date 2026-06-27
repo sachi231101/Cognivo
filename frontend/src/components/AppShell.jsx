@@ -6,12 +6,12 @@ import {
   FolderOpen,
   Users,
   LogOut,
-  Brain,
   ChevronDown,
   Menu,
   X,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { BRAND } from "@/lib/brand";
 import { SIDEBAR, AUTH_BB } from "@/constants/testIds";
 
 const navItemsFor = (role) => {
@@ -40,15 +40,17 @@ export default function AppShell({ children }) {
     <>
       <div className="px-6 py-7 border-b border-white/5">
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-md bg-blue-600 grid place-items-center shadow-lg shadow-blue-900/40">
-            <Brain className="w-5 h-5 text-white" strokeWidth={2.2} />
-          </div>
+          <img
+            src={BRAND.logo}
+            alt={BRAND.name}
+            className="w-10 h-10 rounded-full shadow-lg shadow-blue-900/40 ring-1 ring-white/10"
+          />
           <div>
-            <div className="text-white font-display font-semibold text-lg leading-none">
-              Business Brain
+            <div className="text-white font-display font-semibold text-lg leading-none tracking-tight">
+              {BRAND.name}
             </div>
             <div className="text-[10px] uppercase tracking-[0.22em] text-slate-400 mt-1">
-              Internal AI
+              {BRAND.tagline}
             </div>
           </div>
         </Link>
@@ -132,10 +134,8 @@ export default function AppShell({ children }) {
           <Menu className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-blue-600 grid place-items-center">
-            <Brain className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-display font-semibold">Business Brain</span>
+          <img src={BRAND.logo} alt={BRAND.name} className="w-7 h-7 rounded-full" />
+          <span className="font-display font-semibold">{BRAND.name}</span>
         </div>
         <div className="w-9" />
       </header>

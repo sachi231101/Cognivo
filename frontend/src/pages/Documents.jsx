@@ -18,8 +18,9 @@ import { DOCS } from "@/constants/testIds";
 
 const DEPARTMENTS = ["HR", "Finance", "Sales", "Marketing", "Engineering", "Operations"];
 
-const iconFor = (name) => {
-  const ext = (name || "").split(".").pop().toLowerCase();
+const iconFor = (doc) => {
+  if (doc.type === "website" || doc.source_url) return Globe;
+  const ext = (doc.name || "").split(".").pop().toLowerCase();
   if (ext === "pdf") return FileType;
   if (["doc", "docx"].includes(ext)) return FileType2;
   if (["xls", "xlsx"].includes(ext)) return FileSpreadsheet;
@@ -109,7 +110,7 @@ export default function Documents() {
         {filtered.length ? (
           <ul className="divide-y divide-slate-200">
             {filtered.map((d) => {
-              const Icon = iconFor(d.name);
+              const Icon = iconFor(d);
               return (
                 <li
                   key={d.id}
@@ -190,16 +191,30 @@ function UploadDialog({ onClose, onUploaded }) {
 
   const submitFile = async (e) => {
     e.preventDefault();
-    if (!file) return toast.error("Pick a file");
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("department", dept);
-      await api.post("/documents", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success("Document uploaded");
+      if (tab === "file") {
+        if (!file) {
+          toast.error("Pick a file");
+          setUploading(false);
+          return;
+        }
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("department", dept);
+        await api.post("/documents", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Document uploaded");
+      } else {
+        if (!url) {
+          toast.error("Enter a URL");
+          setUploading(false);
+          return;
+        }
+        await api.post("/documents/crawl", { url, department: dept });
+        toast.success("Website crawled and saved");
+      }
       onUploaded();
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Upload failed");
@@ -239,22 +254,20 @@ function UploadDialog({ onClose, onUploaded }) {
           <X className="w-4 h-4" />
         </button>
         <h3 className="font-display text-xl font-semibold tracking-tight">
-          Add document
+          Add to knowledge base
         </h3>
         <p className="mt-1 text-sm text-slate-600">
-          Upload a file or import from a website URL.
+          Upload a file or import content from a website URL.
         </p>
 
-        {/* Tab switch */}
-        <div className="mt-5 flex gap-1 p-1 bg-slate-100 rounded-lg">
+        <div className="mt-5 inline-flex p-1 rounded-md bg-slate-100">
           <button
             type="button"
             onClick={() => setTab("file")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
-              tab === "file" ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
-            }`}
+            data-testid="upload-tab-file"
+            className={`px-4 py-1.5 text-xs font-semibold rounded ${tab === "file" ? "bg-white shadow-sm text-slate-900" : "text-slate-500"}`}
           >
-            <Upload className="w-4 h-4" /> Upload file
+            File
           </button>
           <button
             type="button"

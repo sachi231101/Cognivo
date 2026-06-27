@@ -7,6 +7,10 @@ import {
   MailPlus,
   TrendingUp,
   ArrowUpRight,
+  HardDrive,
+  Calendar,
+  AlertTriangle,
+  Upload,
   Brain,
   Upload,
   UserPlus,
@@ -25,12 +29,21 @@ const DEPT_COLORS = {
   Operations: "bg-slate-500",
 };
 
+const formatBytes = (b) => {
+  if (!b) return "0 KB";
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${Math.round(b / 1024)} KB`;
+  return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 export default function Dashboard() {
   const { user, company } = useAuth();
   const [stats, setStats] = useState(null);
+  const [gaps, setGaps] = useState(null);
 
   useEffect(() => {
     api.get("/dashboard/stats").then(({ data }) => setStats(data));
+    api.get("/dashboard/knowledge-gaps").then(({ data }) => setGaps(data));
   }, []);
 
   return (
@@ -75,15 +88,22 @@ export default function Dashboard() {
         />
         <StatCard
           icon={MessageCircle}
-          label="Questions asked"
+          label="Questions total"
           value={stats?.total_questions ?? "–"}
           testid={DASH.statQuestions}
           accent="bg-emerald-50 text-emerald-700"
           sub="all time"
         />
         <StatCard
+          icon={Calendar}
+          label="Questions today"
+          value={stats?.questions_today ?? "–"}
+          testid="stat-questions-today"
+          accent="bg-teal-50 text-teal-700"
+        />
+        <StatCard
           icon={Users}
-          label="Team members"
+          label="Team"
           value={stats?.total_members ?? "–"}
           testid={DASH.statMembers}
           accent="bg-violet-50 text-violet-700"
@@ -96,6 +116,13 @@ export default function Dashboard() {
           testid={DASH.statPending}
           accent="bg-amber-50 text-amber-700"
           sub="awaiting acceptance"
+        />
+        <StatCard
+          icon={HardDrive}
+          label="Storage used"
+          value={formatBytes(stats?.storage_bytes ?? 0)}
+          testid="stat-storage"
+          accent="bg-slate-100 text-slate-700"
         />
       </div>
 
