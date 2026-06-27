@@ -9,6 +9,8 @@ import {
   ArrowUpRight,
   HardDrive,
   Calendar,
+  AlertTriangle,
+  Upload,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -33,9 +35,11 @@ const formatBytes = (b) => {
 export default function Dashboard() {
   const { user, company } = useAuth();
   const [stats, setStats] = useState(null);
+  const [gaps, setGaps] = useState(null);
 
   useEffect(() => {
     api.get("/dashboard/stats").then(({ data }) => setStats(data));
+    api.get("/dashboard/knowledge-gaps").then(({ data }) => setGaps(data));
   }, []);
 
   return (

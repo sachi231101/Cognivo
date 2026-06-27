@@ -398,6 +398,46 @@ async def delete_document(doc_id: str, admin: dict = Depends(require_admin)):
 
 
 # ─────────────── Dashboard ───────────────
+@api_router.get("/dashboard/knowledge-gaps")
+async def knowledge_gaps(admin: dict = Depends(require_admin)):
+    """Top questions where the AI couldn't find an answer — gap signal."""
+    company_id = admin["company_id"]
+
+    # group unanswered questions by lowercased text (so "How do I apply for leave?"
+    # and "how do i apply for leave" count together)
+    pipeline = [
+        {"$match": {"company_id": company_id, "was_unanswered": True}},
+        {
+            "$group": {
+                "_id": {"$toLower": "$question"},
+                "question": {"$last": "$question"},
+                "count": {"$sum": 1},
+                "last_asked": {"$max": "$created_at"},
+                "departments": {"$addToSet": "$department"},
+            }
+        },
+        {"$sort": {"count": -1, "last_asked": -1}},
+        {"$limit": 10},
+    ]
+    cursor = db.chats.aggregate(pipeline)
+    gaps = await cursor.to_list(10)
+    total_unanswered = await db.chats.count_documents(
+        {"company_id": company_id, "was_unanswered": True}
+    )
+    return {
+        "total_unanswered": total_unanswered,
+        "gaps": [
+            {
+                "question": g["question"],
+                "count": g["count"],
+                "last_asked": g["last_asked"],
+                "departments": [d for d in g.get("departments", []) if d],
+            }
+            for g in gaps
+        ],
+    }
+
+
 @api_router.get("/dashboard/stats")
 async def dashboard_stats(admin: dict = Depends(require_admin)):
     company_id = admin["company_id"]
@@ -499,6 +539,12 @@ async def _select_context(company_id: str, department: Optional[str], question: 
     return selected, docs
 
 
+FALLBACK_ANSWER = (
+    "I couldn't find this in your company knowledge base. "
+    "Please check with your manager or ask admin to upload the relevant document."
+)
+
+
 @api_router.post("/chat")
 async def chat(payload: ChatRequest, user_jwt: dict = Depends(get_current_user)):
     company_id = user_jwt["company_id"]
@@ -507,10 +553,7 @@ async def chat(payload: ChatRequest, user_jwt: dict = Depends(get_current_user))
     )
 
     if not all_docs:
-        answer = (
-            "I couldn't find this in your company knowledge base. "
-            "Please check with your manager or ask admin to upload the relevant document."
-        )
+        answer = FALLBACK_ANSWER
         sources = []
     else:
         context_text = "\n\n".join(
@@ -555,6 +598,15 @@ async def chat(payload: ChatRequest, user_jwt: dict = Depends(get_current_user))
                 "department": c["department"],
             })
 
+    # detect "couldn't find" responses — gap signal
+    answer_lower = (answer or "").lower()
+    was_unanswered = (
+        "couldn't find" in answer_lower
+        or "could not find" in answer_lower
+        or "not found in" in answer_lower
+        or not sources
+    )
+
     # save chat history
     chat_id = str(uuid.uuid4())
     await db.chats.insert_one({
@@ -565,6 +617,7 @@ async def chat(payload: ChatRequest, user_jwt: dict = Depends(get_current_user))
         "answer": answer,
         "department": payload.department,
         "sources": sources,
+        "was_unanswered": was_unanswered,
         "created_at": now_iso(),
     })
     return {"id": chat_id, "answer": answer, "sources": sources}
