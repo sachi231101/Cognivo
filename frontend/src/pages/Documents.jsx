@@ -8,6 +8,7 @@ import {
   FileSpreadsheet,
   FileType,
   FileType2,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -16,8 +17,9 @@ import { DOCS } from "@/constants/testIds";
 
 const DEPARTMENTS = ["HR", "Finance", "Sales", "Marketing", "Engineering", "Operations"];
 
-const iconFor = (name) => {
-  const ext = (name || "").split(".").pop().toLowerCase();
+const iconFor = (doc) => {
+  if (doc.type === "website" || doc.source_url) return Globe;
+  const ext = (doc.name || "").split(".").pop().toLowerCase();
   if (ext === "pdf") return FileType;
   if (["doc", "docx"].includes(ext)) return FileType2;
   if (["xls", "xlsx"].includes(ext)) return FileSpreadsheet;
@@ -106,7 +108,7 @@ export default function Documents() {
         {filtered.length ? (
           <ul className="divide-y divide-slate-200">
             {filtered.map((d) => {
-              const Icon = iconFor(d.name);
+              const Icon = iconFor(d);
               return (
                 <li
                   key={d.id}
@@ -168,22 +170,38 @@ export default function Documents() {
 }
 
 function UploadDialog({ onClose, onUploaded }) {
+  const [tab, setTab] = useState("file"); // "file" | "url"
   const [file, setFile] = useState(null);
+  const [url, setUrl] = useState("");
   const [dept, setDept] = useState("HR");
   const [uploading, setUploading] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!file) return toast.error("Pick a file");
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("department", dept);
-      await api.post("/documents", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success("Document uploaded");
+      if (tab === "file") {
+        if (!file) {
+          toast.error("Pick a file");
+          setUploading(false);
+          return;
+        }
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("department", dept);
+        await api.post("/documents", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Document uploaded");
+      } else {
+        if (!url) {
+          toast.error("Enter a URL");
+          setUploading(false);
+          return;
+        }
+        await api.post("/documents/crawl", { url, department: dept });
+        toast.success("Website crawled and saved");
+      }
       onUploaded();
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Upload failed");
@@ -207,25 +225,66 @@ function UploadDialog({ onClose, onUploaded }) {
           <X className="w-4 h-4" />
         </button>
         <h3 className="font-display text-xl font-semibold tracking-tight">
-          Upload document
+          Add to knowledge base
         </h3>
         <p className="mt-1 text-sm text-slate-600">
-          PDF, DOCX, XLSX or TXT — up to 15 MB.
+          Upload a file or import content from a website URL.
         </p>
-        <div className="mt-6 space-y-4">
-          <label className="block">
-            <span className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-600">
-              File
-            </span>
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.md"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              data-testid={DOCS.fileInput}
-              className="mt-2 w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-slate-100 file:text-slate-700 file:font-medium hover:file:bg-slate-200"
-              required
-            />
-          </label>
+
+        <div className="mt-5 inline-flex p-1 rounded-md bg-slate-100">
+          <button
+            type="button"
+            onClick={() => setTab("file")}
+            data-testid="upload-tab-file"
+            className={`px-4 py-1.5 text-xs font-semibold rounded ${tab === "file" ? "bg-white shadow-sm text-slate-900" : "text-slate-500"}`}
+          >
+            File
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("url")}
+            data-testid="upload-tab-url"
+            className={`px-4 py-1.5 text-xs font-semibold rounded ${tab === "url" ? "bg-white shadow-sm text-slate-900" : "text-slate-500"}`}
+          >
+            Website URL
+          </button>
+        </div>
+
+        <div className="mt-5 space-y-4">
+          {tab === "file" ? (
+            <label className="block">
+              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-600">
+                File
+              </span>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.md"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                data-testid={DOCS.fileInput}
+                className="mt-2 w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-slate-100 file:text-slate-700 file:font-medium hover:file:bg-slate-200"
+              />
+              <span className="mt-1 block text-[11px] text-slate-500">
+                PDF, DOCX, XLSX, or TXT — up to 15 MB.
+              </span>
+            </label>
+          ) : (
+            <label className="block">
+              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-600">
+                Website URL
+              </span>
+              <input
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://docs.example.com/handbook"
+                data-testid="doc-url-input"
+                className="mt-2 w-full px-4 py-2.5 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="mt-1 block text-[11px] text-slate-500">
+                We'll fetch the page and extract its readable text.
+              </span>
+            </label>
+          )}
           <label className="block">
             <span className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-600">
               Department
@@ -248,7 +307,13 @@ function UploadDialog({ onClose, onUploaded }) {
           data-testid={DOCS.uploadSubmit}
           className="mt-6 w-full bg-[#1E3A8A] text-white py-3 rounded-md font-medium hover:bg-[#1E3A8A]/90 disabled:opacity-60 transition-colors"
         >
-          {uploading ? "Uploading…" : "Upload"}
+          {uploading
+            ? tab === "url"
+              ? "Crawling…"
+              : "Uploading…"
+            : tab === "url"
+              ? "Crawl & save"
+              : "Upload"}
         </button>
       </form>
     </div>

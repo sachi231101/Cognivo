@@ -3,10 +3,11 @@ import logging
 import os
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Optional
 
+import requests
 from dotenv import load_dotenv
 from fastapi import (
     APIRouter,
@@ -28,6 +29,7 @@ from auth_utils import (
     require_admin,
     verify_password,
 )
+from crawler import fetch_url_text
 from doc_parser import chunk_text, extract_text, score_chunk
 from mailer import send_invite_email
 from seed import seed_demo_company
@@ -100,6 +102,8 @@ def public_doc(d: dict) -> dict:
         "id": d["id"],
         "name": d["name"],
         "department": d["department"],
+        "type": d.get("type", "txt"),
+        "source_url": d.get("source_url"),
         "size_bytes": d.get("size_bytes", 0),
         "created_at": d.get("created_at"),
         "uploaded_by": d.get("uploaded_by"),
@@ -294,6 +298,49 @@ async def remove_employee(user_id: str, admin: dict = Depends(require_admin)):
 
 
 # ─────────────── Documents ───────────────
+@api_router.post("/documents/crawl")
+async def crawl_website(
+    payload: dict,
+    admin: dict = Depends(require_admin),
+):
+    """Crawl a website URL and save its readable text as a document."""
+    url = (payload.get("url") or "").strip()
+    department = payload.get("department")
+    if not url:
+        raise HTTPException(status_code=400, detail="URL is required")
+    if department not in DEPARTMENTS:
+        raise HTTPException(status_code=400, detail="Invalid department")
+
+    try:
+        title, text = fetch_url_text(url)
+    except requests.HTTPError as e:
+        raise HTTPException(status_code=400, detail=f"Could not fetch URL: HTTP {e.response.status_code}")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not crawl URL: {e}")
+
+    if not text or len(text) < 50:
+        raise HTTPException(status_code=400, detail="Page had no readable content")
+
+    chunks = chunk_text(text)
+    doc_id = str(uuid.uuid4())
+    name = f"{title} ({url})"[:240]
+    await db.documents.insert_one({
+        "id": doc_id,
+        "company_id": admin["company_id"],
+        "name": name,
+        "department": department,
+        "type": "website",
+        "source_url": url,
+        "content": text,
+        "chunks": chunks,
+        "size_bytes": len(text.encode("utf-8")),
+        "uploaded_by": admin["user_id"],
+        "created_at": now_iso(),
+    })
+    doc = await db.documents.find_one({"id": doc_id}, {"_id": 0, "content": 0, "chunks": 0})
+    return public_doc(doc)
+
+
 @api_router.post("/documents")
 async def upload_document(
     file: UploadFile = File(...),
@@ -359,6 +406,20 @@ async def dashboard_stats(admin: dict = Depends(require_admin)):
     total_members = await db.users.count_documents({"company_id": company_id})
     pending = await db.invites.count_documents({"company_id": company_id, "accepted": False})
 
+    # questions asked today (UTC midnight cutoff — fine for dashboard)
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    questions_today = await db.chats.count_documents(
+        {"company_id": company_id, "created_at": {"$gte": today_start}}
+    )
+
+    # storage used (sum of size_bytes)
+    storage_cursor = db.documents.aggregate([
+        {"$match": {"company_id": company_id}},
+        {"$group": {"_id": None, "total": {"$sum": "$size_bytes"}}},
+    ])
+    storage_doc = await storage_cursor.to_list(1)
+    storage_bytes = (storage_doc[0]["total"] if storage_doc else 0) or 0
+
     # by department
     by_dept = {}
     for dept in DEPARTMENTS:
@@ -370,7 +431,6 @@ async def dashboard_stats(admin: dict = Depends(require_admin)):
         {"company_id": company_id}, {"_id": 0}
     ).sort("created_at", -1).to_list(10)
 
-    # enrich with user name
     user_ids = list({c["user_id"] for c in recent_chats})
     users = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(50)
     user_map = {u["id"]: u["name"] for u in users}
@@ -380,8 +440,10 @@ async def dashboard_stats(admin: dict = Depends(require_admin)):
     return {
         "total_documents": total_docs,
         "total_questions": total_questions,
+        "questions_today": questions_today,
         "total_members": total_members,
         "pending_invites": pending,
+        "storage_bytes": storage_bytes,
         "by_department": by_dept,
         "recent_activity": recent_chats,
     }
@@ -469,9 +531,9 @@ async def chat(payload: ChatRequest, user_jwt: dict = Depends(get_current_user))
 
             chat_client = LlmChat(
                 api_key=EMERGENT_LLM_KEY,
-                session_id=f"bb-{user_jwt['user_id']}-{uuid.uuid4().hex[:8]}",
+                session_id=f"cognivo-{user_jwt['user_id']}-{uuid.uuid4().hex[:8]}",
                 system_message=system_message,
-            ).with_model("anthropic", "claude-sonnet-4-5-20250929")
+            ).with_model("gemini", "gemini-2.5-flash")
 
             answer = await chat_client.send_message(UserMessage(text=payload.message))
             if not isinstance(answer, str):

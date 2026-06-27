@@ -88,7 +88,7 @@ export default function Landing() {
               </button>
             </div>
             <div className="mt-6 text-xs text-slate-500 font-mono">
-              demo · admin@acme.com / Admin@123
+              demo · admin@acmecorp.in / Admin@123
             </div>
           </div>
 

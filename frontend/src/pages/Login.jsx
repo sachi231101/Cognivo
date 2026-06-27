@@ -31,10 +31,10 @@ export default function Login() {
 
   const fillDemo = (role) => {
     if (role === "admin") {
-      setEmail("admin@acme.com");
+      setEmail("admin@acmecorp.in");
       setPassword("Admin@123");
     } else {
-      setEmail("employee@acme.com");
+      setEmail("employee@acmecorp.in");
       setPassword("Employee@123");
     }
   };

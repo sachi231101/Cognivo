@@ -7,6 +7,8 @@ import {
   MailPlus,
   TrendingUp,
   ArrowUpRight,
+  HardDrive,
+  Calendar,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -19,6 +21,13 @@ const DEPT_COLORS = {
   Marketing: "bg-amber-500",
   Engineering: "bg-violet-500",
   Operations: "bg-slate-500",
+};
+
+const formatBytes = (b) => {
+  if (!b) return "0 KB";
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${Math.round(b / 1024)} KB`;
+  return `${(b / (1024 * 1024)).toFixed(1)} MB`;
 };
 
 export default function Dashboard() {
@@ -59,7 +68,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 bb-stagger">
+      <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 bb-stagger">
         <StatCard
           icon={FileText}
           label="Documents"
@@ -69,14 +78,21 @@ export default function Dashboard() {
         />
         <StatCard
           icon={MessageCircle}
-          label="Questions asked"
+          label="Questions total"
           value={stats?.total_questions ?? "–"}
           testid={DASH.statQuestions}
           accent="bg-emerald-50 text-emerald-700"
         />
         <StatCard
+          icon={Calendar}
+          label="Questions today"
+          value={stats?.questions_today ?? "–"}
+          testid="stat-questions-today"
+          accent="bg-teal-50 text-teal-700"
+        />
+        <StatCard
           icon={Users}
-          label="Team members"
+          label="Team"
           value={stats?.total_members ?? "–"}
           testid={DASH.statMembers}
           accent="bg-violet-50 text-violet-700"
@@ -87,6 +103,13 @@ export default function Dashboard() {
           value={stats?.pending_invites ?? "–"}
           testid={DASH.statPending}
           accent="bg-amber-50 text-amber-700"
+        />
+        <StatCard
+          icon={HardDrive}
+          label="Storage used"
+          value={formatBytes(stats?.storage_bytes ?? 0)}
+          testid="stat-storage"
+          accent="bg-slate-100 text-slate-700"
         />
       </div>
 
