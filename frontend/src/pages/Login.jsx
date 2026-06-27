@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Brain, ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { BRAND } from "@/lib/brand";
 import { AUTH_BB } from "@/constants/testIds";
 
 export default function Login() {
@@ -113,10 +114,8 @@ export function AuthShell({ children }) {
       <div className="hidden md:flex relative bg-[#0B132B] text-white p-12 flex-col justify-between overflow-hidden">
         <div className="absolute inset-0 bb-grain opacity-50" />
         <Link to="/" className="relative flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-md bg-blue-600 grid place-items-center">
-            <Brain className="w-4.5 h-4.5 text-white" />
-          </div>
-          <span className="font-display font-semibold text-lg">Business Brain</span>
+          <img src={BRAND.logo} alt={BRAND.name} className="w-9 h-9 rounded-full" />
+          <span className="font-display font-semibold text-lg">{BRAND.name}</span>
         </Link>
         <div className="relative">
           <div className="text-xs uppercase tracking-[0.22em] text-slate-400">

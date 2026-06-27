@@ -43,7 +43,7 @@ EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
 
 DEPARTMENTS = ["HR", "Finance", "Sales", "Marketing", "Engineering", "Operations"]
 
-app = FastAPI(title="Business Brain")
+app = FastAPI(title="Cognivo")
 api_router = APIRouter(prefix="/api")
 
 logger = logging.getLogger("business-brain")
@@ -432,7 +432,7 @@ async def chat(payload: ChatRequest, user_jwt: dict = Depends(get_current_user))
             for i, c in enumerate(context_chunks)
         )
         system_message = (
-            "You are Business Brain, an internal AI assistant for a company. "
+            "You are Cognivo, an internal AI assistant for a company. "
             "Answer the employee's question ONLY using the provided company documents below. "
             "Be concise, accurate, and professional. "
             "Always cite the source document name in your answer (e.g., 'According to HR Policy...'). "
@@ -500,7 +500,7 @@ async def get_departments():
 
 @api_router.get("/")
 async def root():
-    return {"message": "Business Brain API"}
+    return {"message": "Cognivo API"}
 
 
 # ─────────────── App wiring ───────────────

@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  Brain,
   Clock,
   Lock,
   Search,
@@ -10,6 +9,7 @@ import {
   Zap,
   Building2,
 } from "lucide-react";
+import { BRAND } from "@/lib/brand";
 import { LANDING } from "@/constants/testIds";
 
 export default function Landing() {
@@ -20,11 +20,9 @@ export default function Landing() {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-[#1E3A8A] grid place-items-center">
-              <Brain className="w-4.5 h-4.5 text-white" />
-            </div>
+            <img src={BRAND.logo} alt={BRAND.name} className="w-9 h-9 rounded-full" />
             <span className="font-display font-semibold tracking-tight text-lg">
-              Business Brain
+              {BRAND.name}
             </span>
           </div>
           <nav className="hidden md:flex items-center gap-8 text-sm text-slate-600">
@@ -69,7 +67,7 @@ export default function Landing() {
               not 2 weeks.
             </h1>
             <p className="mt-7 text-lg text-slate-600 max-w-xl leading-relaxed">
-              Business Brain turns every company document — HR policies, SOPs, finance
+              Cognivo turns every company document — HR policies, SOPs, finance
               processes — into an instant AI assistant your employees can ask in plain
               English. Answers come from your data only. Never invented.
             </p>
@@ -123,7 +121,7 @@ export default function Landing() {
                       </p>
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
-                          <Brain className="w-2.5 h-2.5" /> HR Policy Handbook
+                          <img src={BRAND.logo} alt="" className="w-3 h-3 rounded-full" /> HR Policy Handbook
                         </span>
                       </div>
                     </div>
@@ -282,10 +280,10 @@ export default function Landing() {
       <footer className="border-t border-slate-200 py-10">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Brain className="w-4 h-4" /> Business Brain · Internal AI for modern teams
+            <img src={BRAND.logo} alt="" className="w-5 h-5 rounded-full" /> Cognivo · Internal AI for modern teams
           </div>
           <div className="text-xs text-slate-400">
-            © {new Date().getFullYear()} Business Brain
+            © {new Date().getFullYear()} Cognivo
           </div>
         </div>
       </footer>

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Sparkles, FileText, Plus, Brain } from "lucide-react";
+import { Send, Sparkles, FileText, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { BRAND } from "@/lib/brand";
 import { CHAT } from "@/constants/testIds";
 
 const DEPARTMENTS = ["All", "HR", "Finance", "Sales", "Marketing", "Engineering", "Operations"];
@@ -110,9 +111,11 @@ export default function Chat() {
         <div className="max-w-3xl mx-auto">
           {messages.length === 0 && (
             <div className="py-10 text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#1E3A8A] text-white mb-5">
-                <Brain className="w-7 h-7" />
-              </div>
+              <img
+                src={BRAND.logo}
+                alt={BRAND.name}
+                className="inline-block w-16 h-16 rounded-2xl mb-5 shadow-lg shadow-blue-900/20"
+              />
               <h2 className="font-display text-3xl font-semibold tracking-tight">
                 Hi {user?.name?.split(" ")[0]} — what would you like to know?
               </h2>
