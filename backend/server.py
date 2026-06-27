@@ -29,6 +29,7 @@ from auth_utils import (
     verify_password,
 )
 from doc_parser import chunk_text, extract_text, score_chunk
+from mailer import send_invite_email
 from seed import seed_demo_company
 
 ROOT_DIR = Path(__file__).parent
@@ -75,6 +76,7 @@ class InviteSignupRequest(BaseModel):
 
 class CreateInviteRequest(BaseModel):
     email: EmailStr
+    invite_base_url: Optional[str] = None  # frontend origin for the invite link
 
 
 class ChatRequest(BaseModel):
@@ -173,9 +175,8 @@ async def me(user_jwt: dict = Depends(get_current_user)):
 # ─────────────── Invite Routes ───────────────
 @api_router.post("/invites")
 async def create_invite(payload: CreateInviteRequest, admin: dict = Depends(require_admin)):
-    """Admin creates an invite link for an employee."""
+    """Admin creates an invite link for an employee and emails it."""
     email = payload.email.lower()
-    # Optional: check if user already exists
     existing = await db.users.find_one({"email": email, "company_id": admin["company_id"]})
     if existing:
         raise HTTPException(status_code=400, detail="User already in this workspace")
@@ -190,7 +191,30 @@ async def create_invite(payload: CreateInviteRequest, admin: dict = Depends(requ
         "accepted": False,
         "created_at": now_iso(),
     })
-    return {"token": token, "email": email}
+
+    # Build invite link
+    base = (payload.invite_base_url or "").rstrip("/")
+    invite_link = f"{base}/invite/{token}" if base else f"/invite/{token}"
+
+    # Lookup inviter + company name for the email
+    company = await get_company(admin["company_id"])
+    inviter = await db.users.find_one({"id": admin["user_id"]}, {"_id": 0, "name": 1})
+    inviter_name = (inviter or {}).get("name", "Your admin")
+
+    email_result = await send_invite_email(
+        to_email=email,
+        invite_link=invite_link,
+        company_name=company["name"],
+        inviter_name=inviter_name,
+    )
+
+    return {
+        "token": token,
+        "email": email,
+        "invite_link": invite_link,
+        "email_sent": email_result.get("sent", False),
+        "email_error": email_result.get("error"),
+    }
 
 
 @api_router.get("/invites/{token}")

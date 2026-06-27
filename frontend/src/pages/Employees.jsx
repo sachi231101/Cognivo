@@ -154,10 +154,19 @@ function InviteDialog({ onClose, onSent }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.post("/invites", { email });
-      const link = `${window.location.origin}/invite/${data.token}`;
-      setResult({ email: data.email, link });
-      toast.success("Invite created");
+      const { data } = await api.post("/invites", {
+        email,
+        invite_base_url: window.location.origin,
+      });
+      const link = data.invite_link.startsWith("http")
+        ? data.invite_link
+        : `${window.location.origin}${data.invite_link}`;
+      setResult({ email: data.email, link, emailSent: data.email_sent, emailError: data.email_error });
+      if (data.email_sent) {
+        toast.success(`Invite email sent to ${data.email}`);
+      } else {
+        toast.warning("Invite created. Email could not be sent — share the link manually.");
+      }
       onSent();
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Could not create invite");
@@ -215,16 +224,24 @@ function InviteDialog({ onClose, onSent }) {
           </>
         ) : (
           <div data-testid={EMP.inviteLinkResult}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Invite ready
+            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${result.emailSent ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {result.emailSent ? "Invite email sent" : "Invite created (email not sent)"}
             </div>
             <h3 className="mt-4 font-display text-xl font-semibold tracking-tight">
-              Share this link
+              {result.emailSent ? "Email on its way" : "Share this link"}
             </h3>
             <p className="mt-1 text-sm text-slate-600">
               <span className="font-medium text-slate-900">{result.email}</span>{" "}
-              can sign up using this link.
+              {result.emailSent
+                ? "will receive an email with the invite link."
+                : "can sign up using this link."}
             </p>
+            {result.emailError && (
+              <div className="mt-3 p-2.5 bg-red-50 border border-red-200 rounded-md text-xs text-red-700">
+                Email error: {result.emailError}
+              </div>
+            )}
             <div className="mt-5 p-3 bg-slate-50 border border-slate-200 rounded-md text-xs font-mono break-all">
               {result.link}
             </div>
