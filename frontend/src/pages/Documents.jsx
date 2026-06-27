@@ -8,6 +8,8 @@ import {
   FileSpreadsheet,
   FileType,
   FileType2,
+  Globe,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -21,6 +23,7 @@ const iconFor = (name) => {
   if (ext === "pdf") return FileType;
   if (["doc", "docx"].includes(ext)) return FileType2;
   if (["xls", "xlsx"].includes(ext)) return FileSpreadsheet;
+  if (ext === "web") return Globe;
   return FileText;
 };
 
@@ -73,7 +76,7 @@ export default function Documents() {
             data-testid={DOCS.uploadBtn}
             className="inline-flex items-center gap-2 bg-[#1E3A8A] text-white px-5 py-2.5 rounded-md text-sm font-medium hover:bg-[#1E3A8A]/90 transition-colors"
           >
-            <Upload className="w-4 h-4" /> Upload document
+            <Upload className="w-4 h-4" /> Add document
           </button>
         )}
       </div>
@@ -117,12 +120,22 @@ export default function Documents() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-slate-900 truncate">{d.name}</div>
-                    <div className="mt-0.5 text-xs text-slate-500 flex items-center gap-2">
+                    <div className="mt-0.5 text-xs text-slate-500 flex items-center gap-2 flex-wrap">
                       <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded uppercase text-[10px] tracking-wider font-semibold">
                         {d.department}
                       </span>
                       <span>{Math.max(1, Math.round(d.size_bytes / 1024))} KB</span>
-                      <span>· {new Date(d.created_at).toLocaleDateString()}</span>
+                      <span>· {new Date(d.created_at).toLocaleDateString("en-IN")}</span>
+                      {d.source_url && (
+                        <a
+                          href={d.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                        >
+                          <Link2 className="w-3 h-3" /> Source URL
+                        </a>
+                      )}
                     </div>
                   </div>
                   {isAdmin && (
@@ -168,11 +181,14 @@ export default function Documents() {
 }
 
 function UploadDialog({ onClose, onUploaded }) {
+  const [tab, setTab] = useState("file"); // "file" | "url"
   const [file, setFile] = useState(null);
+  const [url, setUrl] = useState("");
+  const [urlName, setUrlName] = useState("");
   const [dept, setDept] = useState("HR");
   const [uploading, setUploading] = useState(false);
 
-  const submit = async (e) => {
+  const submitFile = async (e) => {
     e.preventDefault();
     if (!file) return toast.error("Pick a file");
     setUploading(true);
@@ -192,13 +208,29 @@ function UploadDialog({ onClose, onUploaded }) {
     }
   };
 
+  const submitUrl = async (e) => {
+    e.preventDefault();
+    if (!url.trim()) return toast.error("Enter a URL");
+    setUploading(true);
+    try {
+      await api.post("/documents/url", {
+        url: url.trim(),
+        department: dept,
+        name: urlName.trim() || undefined,
+      });
+      toast.success("Website content saved as document");
+      onUploaded();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Failed to fetch URL");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" data-testid={DOCS.uploadDialog}>
       <div className="absolute inset-0 bg-slate-900/60" onClick={onClose} />
-      <form
-        onSubmit={submit}
-        className="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-6"
-      >
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
         <button
           type="button"
           onClick={onClose}
@@ -207,50 +239,119 @@ function UploadDialog({ onClose, onUploaded }) {
           <X className="w-4 h-4" />
         </button>
         <h3 className="font-display text-xl font-semibold tracking-tight">
-          Upload document
+          Add document
         </h3>
         <p className="mt-1 text-sm text-slate-600">
-          PDF, DOCX, XLSX or TXT — up to 15 MB.
+          Upload a file or import from a website URL.
         </p>
-        <div className="mt-6 space-y-4">
-          <label className="block">
-            <span className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-600">
-              File
-            </span>
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.md"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              data-testid={DOCS.fileInput}
-              className="mt-2 w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-slate-100 file:text-slate-700 file:font-medium hover:file:bg-slate-200"
-              required
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-600">
-              Department
-            </span>
-            <select
-              value={dept}
-              onChange={(e) => setDept(e.target.value)}
-              data-testid={DOCS.deptSelect}
-              className="mt-2 w-full px-4 py-2.5 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {DEPARTMENTS.map((d) => (
-                <option key={d}>{d}</option>
-              ))}
-            </select>
-          </label>
+
+        {/* Tab switch */}
+        <div className="mt-5 flex gap-1 p-1 bg-slate-100 rounded-lg">
+          <button
+            type="button"
+            onClick={() => setTab("file")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
+              tab === "file" ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <Upload className="w-4 h-4" /> Upload file
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("url")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
+              tab === "url" ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <Globe className="w-4 h-4" /> From URL
+          </button>
         </div>
-        <button
-          type="submit"
-          disabled={uploading}
-          data-testid={DOCS.uploadSubmit}
-          className="mt-6 w-full bg-[#1E3A8A] text-white py-3 rounded-md font-medium hover:bg-[#1E3A8A]/90 disabled:opacity-60 transition-colors"
-        >
-          {uploading ? "Uploading…" : "Upload"}
-        </button>
-      </form>
+
+        {tab === "file" ? (
+          <form onSubmit={submitFile} className="mt-5 space-y-4">
+            <label className="block">
+              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-600">
+                File
+              </span>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.md"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                data-testid={DOCS.fileInput}
+                className="mt-2 w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-slate-100 file:text-slate-700 file:font-medium hover:file:bg-slate-200"
+                required
+              />
+              <p className="mt-1 text-xs text-slate-400">PDF, DOCX, XLSX or TXT — up to 15 MB.</p>
+            </label>
+            <DeptSelect value={dept} onChange={setDept} />
+            <button
+              type="submit"
+              disabled={uploading}
+              data-testid={DOCS.uploadSubmit}
+              className="mt-2 w-full bg-[#1E3A8A] text-white py-3 rounded-md font-medium hover:bg-[#1E3A8A]/90 disabled:opacity-60 transition-colors"
+            >
+              {uploading ? "Uploading…" : "Upload"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={submitUrl} className="mt-5 space-y-4">
+            <label className="block">
+              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-600">
+                Website URL
+              </span>
+              <input
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://yourcompany.com/policies"
+                className="mt-2 w-full px-4 py-2.5 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <p className="mt-1 text-xs text-slate-400">We'll crawl and extract the text content.</p>
+            </label>
+            <label className="block">
+              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-600">
+                Document name (optional)
+              </span>
+              <input
+                type="text"
+                value={urlName}
+                onChange={(e) => setUrlName(e.target.value)}
+                placeholder="e.g., Company Leave Policy"
+                className="mt-2 w-full px-4 py-2.5 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
+            <DeptSelect value={dept} onChange={setDept} />
+            <button
+              type="submit"
+              disabled={uploading}
+              className="mt-2 w-full bg-[#1E3A8A] text-white py-3 rounded-md font-medium hover:bg-[#1E3A8A]/90 disabled:opacity-60 transition-colors"
+            >
+              {uploading ? "Fetching…" : "Import from URL"}
+            </button>
+          </form>
+        )}
+      </div>
     </div>
+  );
+}
+
+function DeptSelect({ value, onChange }) {
+  return (
+    <label className="block">
+      <span className="text-xs uppercase tracking-[0.2em] font-semibold text-slate-600">
+        Department
+      </span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        data-testid={DOCS.deptSelect}
+        className="mt-2 w-full px-4 py-2.5 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        {DEPARTMENTS.map((d) => (
+          <option key={d}>{d}</option>
+        ))}
+      </select>
+    </label>
   );
 }
