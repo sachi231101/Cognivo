@@ -1,0 +1,108 @@
+{
+  "theme": "Light",
+  "archetype": "Archetype 4 (Swiss & High-Contrast) - adapted for B2B SaaS",
+  "emotion_and_vibe": "Authoritative, fast, reliable, and crisp. The UI must feel like a precision tool, not a playful toy.",
+  "typography": {
+    "heading_font": "Outfit",
+    "body_font": "IBM Plex Sans",
+    "scale": {
+      "h1": "text-5xl sm:text-6xl tracking-tighter font-bold",
+      "h2": "text-3xl sm:text-4xl tracking-tight font-semibold",
+      "h3": "text-xl sm:text-2xl tracking-tight font-medium",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body": "text-base leading-relaxed text-slate-700",
+      "small_label": "text-xs font-semibold uppercase tracking-[0.2em] text-slate-500"
+    },
+    "rules": [
+      "Never use Inter, Roboto, or standard generic sans-serifs for headings.",
+      "Headlines > 32px MUST use tracking-tight.",
+      "Labels must be uppercase, tiny, and wide tracked."
+    ]
+  },
+  "colors": {
+    "primary": "#1E3A8A",
+    "accent": "#3B82F6",
+    "backgrounds": {
+      "main": "#FFFFFF",
+      "sidebar": "#0B132B",
+      "surface_alt": "#F8FAFC",
+      "chat_user": "#EFF6FF",
+      "chat_ai": "#FFFFFF"
+    },
+    "text": {
+      "primary": "#0F172A",
+      "secondary": "#475569",
+      "inverse": "#FFFFFF",
+      "sidebar_inactive": "#94A3B8",
+      "sidebar_active": "#FFFFFF"
+    },
+    "borders": {
+      "light": "#E2E8F0",
+      "dark": "#1E293B"
+    }
+  },
+  "layout_and_spacing": {
+    "philosophy": "Generous spacing, optical alignment, and stark contrasts.",
+    "marketing_page": {
+      "hero_padding": "py-24 md:py-32",
+      "grid": "grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-8",
+      "bento_features": "Use overlapping bento boxes with high contrast."
+    },
+    "dashboard": {
+      "sidebar": "w-64 fixed inset-y-0 left-0 bg-[#0B132B] text-white flex flex-col border-r border-[#1E293B]",
+      "main_content": "ml-64 bg-white min-h-screen",
+      "header": "h-16 border-b border-slate-200 bg-white/80 backdrop-blur-xl sticky top-0 z-40 px-8 flex items-center justify-between",
+      "content_padding": "p-8",
+      "grid": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 (The 'Control Room' mode)"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 transition-all rounded-md px-6 py-2.5 font-medium shadow-sm data-testid='btn-primary'",
+      "secondary": "bg-white text-[#1E3A8A] border border-slate-200 hover:border-[#1E3A8A] transition-all rounded-md px-6 py-2.5 font-medium data-testid='btn-secondary'",
+      "danger": "bg-red-50 text-red-600 hover:bg-red-100 rounded-md px-6 py-2.5 font-medium data-testid='btn-danger'"
+    },
+    "cards": {
+      "dashboard_widget": "bg-white border border-slate-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow",
+      "bento_item": "bg-[#F8FAFC] border border-slate-200 p-8 rounded-xl relative overflow-hidden"
+    },
+    "inputs": {
+      "chat_input": "w-full bg-white border border-slate-200 rounded-full px-6 py-4 pr-16 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all text-slate-900"
+    },
+    "chat_bubbles": {
+      "user": "bg-[#EFF6FF] text-[#0F172A] rounded-2xl rounded-tr-sm p-5 max-w-[80%] self-end",
+      "ai": "bg-white border border-slate-200 text-[#0F172A] rounded-2xl rounded-tl-sm p-5 max-w-[80%] self-start shadow-sm"
+    }
+  },
+  "motion_and_interactions": {
+    "hover": "All interactive elements must explicitly change state (e.g. hover:border-[#1E3A8A] hover:-translate-y-0.5 transition-all duration-200).",
+    "focus": "High contrast focus rings required (focus:ring-2 focus:ring-[#3B82F6]).",
+    "page_load": "Staggered fade-up for lists and grid items."
+  },
+  "assets": {
+    "icons": "lucide-react",
+    "images": [
+      {
+        "category": "marketing_hero",
+        "url": "https://images.pexels.com/photos/12903168/pexels-photo-12903168.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Professional team collaborating, use in marketing page hero section with a gradient overlay."
+      },
+      {
+        "category": "marketing_logo_placeholder",
+        "url": "https://images.pexels.com/photos/26576975/pexels-photo-26576975.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Abstract/clean minimalist logo for trusted by sections on the marketing page."
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "CRITICAL: Apply data-testid to EVERY interactive and key informational element (buttons, links, inputs, cards). e.g., data-testid='upload-doc-button'.",
+    "Use plain .js and .jsx files. Do not use TypeScript.",
+    "Implement the dashboard using the dark sidebar (#0B132B) and white main area.",
+    "Use pure HTML + Tailwind for structural layouts in marketing pages, avoiding rigid Shadcn containers.",
+    "Use Shadcn components for complex interactions (Dialogs, Selects, Dropdowns, Tables) but customize them heavily to match the stark, border-driven 'Swiss & High-Contrast' aesthetic.",
+    "The chat interface should feel airy, with generous padding (p-5 for bubbles) and clear differentiation between user and AI.",
+    "Add 'Outfit' and 'IBM Plex Sans' to the application via Google Fonts in index.css.",
+    "Ensure the hero image uses an appropriate overlay (bg-white/20 to bg-white/40) if placing text over it, or place the image alongside the text in a grid.",
+    "Follow the mobile-first approach, ensuring the sidebar collapses into a hamburger menu on small screens."
+  ]
+}
